@@ -597,6 +597,7 @@ build)
 
 	if [ "${ANDROID_ABI}" = "x86" ]; then
 		flutter build apk \
+			--flavor standard \
 			--local-engine-src-path="$(readlink -mf "../flutter-sdk/src")" \
 			--local-engine=android_jit_release_x86 \
 			--debug \
@@ -605,6 +606,7 @@ build)
 			--target-platform "${FLUTTER_TARGET}"
 	else
 		flutter build apk \
+			--flavor standard \
 			--release \
 			--build-number="${VERCODE}" \
 			--build-name="${VERNAME}" \

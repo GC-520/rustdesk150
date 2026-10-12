@@ -106,8 +106,29 @@ android {
         versionName flutterVersionName
     }
 
+    // 产品变体：
+    //  standard —— 标准变体，applicationId 保持 com.carriez.flutter_hbb（与原有构建一致）
+    //  zyt      —— 卓易通兼容变体：applicationId 追加 ".zyt" 后缀以脱离包名管控名单；
+    //              全 ABI 由构建命令 --target-platform 控制（ndk abiFilters 与
+    //              --split-per-abi 时 Flutter 插件设置的 splits.abi 冲突，不可在此设置）；
+    //              数据目录随 applicationId 自动隔离，可与标准变体共存。
+    // 构建命令：flutter build apk --flavor zyt --release
+    flavorDimensions "distribution"
+    productFlavors {
+        standard {
+            dimension "distribution"
+        }
+        zyt {
+            dimension "distribution"
+            applicationIdSuffix ".zyt"
+        }
+    }
+
     signingConfigs {
       release {
+        // 显式启用 v1(JAR) + v2(APK Signature Scheme) 双签名，兼容卓易通的安装校验
+        enableV1Signing true
+        enableV2Signing true
         keyAlias keystoreProperties['keyAlias']
         keyPassword keystoreProperties['keyPassword']
         storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null

@@ -31,13 +31,14 @@ env:
   FLUTTER_ELINUX_VERSION: "3.16.9"
   TAG_NAME: "${{ inputs.upload-tag }}"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  # vcpkg version: 2025.08.27
+  # vcpkg version: 2026.07.29
   # If we change the `VCPKG COMMIT_ID`, please remember:
   # 1. Call `$VCPKG_ROOT/vcpkg x-update-baseline` to update the baseline in `vcpkg.json`.
-  #  Or we may face build issue like 
+  #  Or we may face build issue like
   #  https://github.com/rustdesk/rustdesk/actions/runs/14414119794/job/40427970174
   # 2. Update the `VCPKG_COMMIT_ID` in `ci.yml` and `playground.yml`.
-  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
+  VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+  VCPKG_CMAKE_VERSION: "4.3.0"
   ARMV7_VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836" # 2025.01.13, got "/opt/artifacts/vcpkg/vcpkg: No such file or directory" with latest version
   VERSION: "1.4.4"
   NDK_VERSION: "r27c"
@@ -1023,8 +1024,8 @@ jobs:
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
               # build flutter
               pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm64 --split-per-abi
-              mv build/app/outputs/flutter-apk/app-arm64-v8a-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
+              flutter build apk "--${{ matrix.job.reltype }}" --flavor standard --target-platform android-arm64 --split-per-abi
+              mv build/app/outputs/flutter-apk/app-arm64-v8a-standard-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
             ;;
             armv7-linux-androideabi)
               mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
@@ -1032,8 +1033,8 @@ jobs:
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
               # build flutter
               pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm --split-per-abi
-              mv build/app/outputs/flutter-apk/app-armeabi-v7a-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
+              flutter build apk "--${{ matrix.job.reltype }}" --flavor standard --target-platform android-arm --split-per-abi
+              mv build/app/outputs/flutter-apk/app-armeabi-v7a-standard-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
             ;;
             x86_64-linux-android)
               mkdir -p ./flutter/android/app/src/main/jniLibs/x86_64
@@ -1041,8 +1042,8 @@ jobs:
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86_64/librustdesk.so
               # build flutter
               pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-x64 --split-per-abi
-              mv build/app/outputs/flutter-apk/app-x86_64-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
+              flutter build apk "--${{ matrix.job.reltype }}" --flavor standard --target-platform android-x64 --split-per-abi
+              mv build/app/outputs/flutter-apk/app-x86_64-standard-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
             ;;
             i686-linux-android)
               mkdir -p ./flutter/android/app/src/main/jniLibs/x86
@@ -1050,8 +1051,8 @@ jobs:
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86/librustdesk.so
               # build flutter
               pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-x86 --split-per-abi
-              mv build/app/outputs/flutter-apk/app-x86-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
+              flutter build apk "--${{ matrix.job.reltype }}" --flavor standard --target-platform android-x86 --split-per-abi
+              mv build/app/outputs/flutter-apk/app-x86-standard-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
             ;;
           esac
           popd
@@ -1237,10 +1238,10 @@ jobs:
           fi
           # build flutter
           pushd flutter
-          flutter build apk "--${{ env.reltype }}" --target-platform android-arm64,android-arm,android-x64${{ env.x86_target }}
+          flutter build apk "--${{ env.reltype }}" --flavor standard --target-platform android-arm64,android-arm,android-x64${{ env.x86_target }}
           popd
           mkdir -p signed-apk
-          mv ./flutter/build/app/outputs/flutter-apk/app-${{ env.reltype }}.apk signed-apk/rustdesk-${{ env.VERSION }}-universal${{ env.suffix }}.apk
+          mv ./flutter/build/app/outputs/flutter-apk/app-standard-${{ env.reltype }}.apk signed-apk/rustdesk-${{ env.VERSION }}-universal${{ env.suffix }}.apk
 
       # https://github.com/r0adkll/sign-android-release/issues/84#issuecomment-1889636075
       - name: Setup sign tool version variable
@@ -1373,6 +1374,15 @@ jobs:
         with:
           name: bridge-artifact
           path: ./
+
+      # vcpkg 2026.07.29's SPDX scripts require CMake 4.3+, but this ARM64 runner selects CMake 3.31.
+      - name: Install CMake for vcpkg on Linux ARM64
+        if: matrix.job.arch == 'aarch64' && env.UPLOAD_ARTIFACT == 'true'
+        run: |
+          python3 -m pip install --user "cmake==${VCPKG_CMAKE_VERSION}"
+          user_base="$(python3 -m site --user-base)"
+          "${user_base}/bin/cmake" --version
+          echo "${user_base}/bin" >> "${GITHUB_PATH}"
 
       - name: Setup vcpkg with Github Actions binary cache
         if: matrix.job.arch == 'x86_64' || env.UPLOAD_ARTIFACT == 'true'
