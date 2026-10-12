@@ -526,7 +526,7 @@ build)
 			--android-cpu x86 --runtime-mode=jit_release \
 			--no-goma --no-enable-unittests
 
-		echo "## Perform host engine build"
+		echo "## Perform android engine build"
 
 		ninja -C out/host_jit_release_x86
 
