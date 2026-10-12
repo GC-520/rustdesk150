@@ -109,7 +109,8 @@ android {
     // 产品变体：
     //  standard —— 标准变体，applicationId 保持 com.carriez.flutter_hbb（与原有构建一致）
     //  zyt      —— 卓易通兼容变体：applicationId 追加 ".zyt" 后缀以脱离包名管控名单；
-    //              abiFilters 覆盖全部 ABI（卓易通容器 ABI 不固定，缺架构会导致安装失败）；
+    //              全 ABI 由构建命令 --target-platform 控制（ndk abiFilters 与
+    //              --split-per-abi 时 Flutter 插件设置的 splits.abi 冲突，不可在此设置）；
     //              数据目录随 applicationId 自动隔离，可与标准变体共存。
     // 构建命令：flutter build apk --flavor zyt --release
     flavorDimensions "distribution"
@@ -120,9 +121,6 @@ android {
         zyt {
             dimension "distribution"
             applicationIdSuffix ".zyt"
-            ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
-            }
         }
     }
 
