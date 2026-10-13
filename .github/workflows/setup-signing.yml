@@ -1,0 +1,60 @@
+name: Setup Android Signing Secret
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-and-set:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - name: Generate release keystore
+        run: |
+          keytool -genkey -v \
+            -keystore rustdesk-release.jks \
+            -keyalg RSA -keysize 2048 -validity 36500 \
+            -alias rustdesk-release \
+            -storepass RustDesk2026! \
+            -keypass RustDesk2026! \
+            -dname "CN=RustDesk, OU=Dev, O=GC-520, L=Shanghai, ST=Shanghai, C=CN"
+
+      - name: Base64 encode keystore
+        id: encode
+        run: |
+          base64 -w 0 rustdesk-release.jks > keystore_b64.txt
+          echo "b64=$(cat keystore_b64.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Set ANDROID_SIGNING_KEY secret
+        run: |
+          echo "${{ steps.encode.outputs.b64 }}" | gh secret set ANDROID_SIGNING_KEY --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set ANDROID_ALIAS secret
+        run: |
+          echo "rustdesk-release" | gh secret set ANDROID_ALIAS --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set ANDROID_KEY_STORE_PASSWORD secret
+        run: |
+          echo "RustDesk2026!" | gh secret set ANDROID_KEY_STORE_PASSWORD --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set ANDROID_KEY_PASSWORD secret
+        run: |
+          echo "RustDesk2026!" | gh secret set ANDROID_KEY_PASSWORD --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify secrets
+        run: |
+          gh secret list --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup
+        run: rm -f rustdesk-release.jks keystore_b64.txt
